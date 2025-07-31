@@ -1,148 +1,142 @@
 export function initParticles() {
-  // Create optimized canvas
   const canvas = document.createElement('canvas');
   canvas.className = 'particle-canvas';
   document.body.appendChild(canvas);
-  
-  // GPU-accelerated rendering
   const ctx = canvas.getContext('2d', { alpha: true });
+  
+  // Cosmic dimensions
   let width = window.innerWidth;
   let height = window.innerHeight;
   canvas.width = width;
   canvas.height = height;
 
-  // Performance-optimized particles
-  const particles = [];
-  const particleCount = 80; // Reduced from 150
-  const colors = ['#ffd700', '#ff8c42', '#ff6b35', '#4a0e4e'];
+  // Enhanced cosmic palette
+  const colors = [
+    'rgba(255, 215, 0, 0.8)',     // Gold
+    'rgba(255, 107, 53, 0.7)',    // Orange
+    'rgba(106, 30, 127, 0.6)',    // Purple
+    'rgba(0, 191, 255, 0.5)'      // Cosmic blue
+  ];
 
-  // Optimized shooting stars
-  const shootingStars = Array(3).fill().map(() => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    speed: Math.random() * 3 + 2, // Reduced speed
-    size: Math.random() * 1.5 + 0.5,
+  // REBALANCED PARTICLES (better performance/visual ratio)
+  const particles = [];
+  const particleCount = 120; // Sweet spot between epic and efficient
+  
+  // RECLAIMED SHOOTING STARS
+  const shootingStars = Array(5).fill().map(() => ({
+    x: Math.random() * width * 1.5,
+    y: Math.random() * height * 0.5,
+    speed: Math.random() * 8 + 4,  // Faster trails
+    size: Math.random() * 3 + 1,
     trail: [],
-    lastUpdate: performance.now()
+    lastUpdate: performance.now(),
+    color: `rgba(255, ${Math.floor(150 + Math.random() * 105)}, 50, 0.9)`
   }));
 
-  // Initialize particles with better distribution
+  // Initialize particles with cosmic motion
   for (let i = 0; i < particleCount; i++) {
     particles.push({
       x: Math.random() * width,
       y: Math.random() * height,
-      size: Math.random() * 2 + 0.5, // Smaller particles
+      size: Math.random() * 4 + 1,
       color: colors[Math.floor(Math.random() * colors.length)],
-      speedX: Math.random() * 0.3 - 0.15, // Slower movement
-      speedY: Math.random() * 0.3 - 0.15,
-      angle: 0,
-      angleSpeed: Math.random() * 0.01 - 0.005
+      speedX: (Math.random() - 0.5) * 0.8,
+      speedY: (Math.random() - 0.5) * 0.8,
+      orbitRadius: Math.random() * 50 + 20,
+      angle: Math.random() * Math.PI * 2,
+      frequency: Math.random() * 0.02 + 0.01
     });
   }
 
-  // Throttled animation loop
+  // SMART ANIMATION LOOP (60FPS when possible, gracefully degrades)
   let lastFrameTime = 0;
-  const frameRate = 30; // Target FPS
+  const targetFPS = 60;
   
   function animate(timestamp) {
-    // Skip frames to maintain target FPS
-    if (timestamp - lastFrameTime < 1000 / frameRate) {
+    // Adaptive frame skipping
+    const timeSinceLast = timestamp - lastFrameTime;
+    const targetInterval = 1000 / targetFPS;
+    
+    if (timeSinceLast < targetInterval - 3) {
       requestAnimationFrame(animate);
       return;
     }
     lastFrameTime = timestamp;
 
-    // Efficient clearing
-    ctx.clearRect(0, 0, width, height);
-    
-    // Batch particle drawing
-    ctx.save();
+    // DARK COSMIC BACKGROUND (fixed)
+    ctx.fillStyle = 'rgba(10, 10, 26, 0.15)'; // Slightly more visible
+    ctx.fillRect(0, 0, width, height);
+
+    // GALACTIC PARTICLES
     particles.forEach(p => {
-      p.x += p.speedX;
-      p.y += p.speedY;
-      p.angle += p.angleSpeed;
+      // Orbital motion with noise
+      p.angle += p.frequency;
+      p.x += Math.sin(p.angle) * 0.3 + p.speedX;
+      p.y += Math.cos(p.angle * 0.7) * 0.3 + p.speedY;
       
-      // Boundary wrapping with buffer
-      if (p.x > width + 20) p.x = -20;
-      if (p.x < -20) p.x = width + 20;
-      if (p.y > height + 20) p.y = -20;
-      if (p.y < -20) p.y = height + 20;
+      // Boundary recycling
+      if (p.x < -50) p.x = width + 50;
+      if (p.x > width + 50) p.x = -50;
+      if (p.y < -50) p.y = height + 50;
+      if (p.y > height + 50) p.y = -50;
       
-      // Optimized glow effect
-      const glowIntensity = 0.6 + 0.4 * Math.sin(timestamp * 0.001 + p.x * 0.005);
+      // Pulsing glow effect
+      const pulse = 0.7 + 0.3 * Math.sin(timestamp * 0.002 + p.x * 0.01);
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size * pulse, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
-      ctx.shadowBlur = p.size * 2 * glowIntensity;
+      ctx.shadowBlur = p.size * 5 * pulse;
       ctx.shadowColor = p.color;
       ctx.fill();
     });
-    ctx.restore();
 
-    // Optimized shooting stars
+    // EPIC SHOOTING STARS
     shootingStars.forEach(star => {
-      const deltaTime = Math.min(timestamp - star.lastUpdate, 100); // Cap delta
+      const deltaTime = Math.min(timestamp - star.lastUpdate, 32); // Cap for consistency
       star.lastUpdate = timestamp;
       
-      star.x -= star.speed * (deltaTime / 1000);
-      star.y += star.speed * 0.3 * (deltaTime / 1000);
+      star.x -= star.speed * (deltaTime / 16);
+      star.y += star.speed * 0.5 * (deltaTime / 16);
       
+      // Trail magic
       star.trail.push({ x: star.x, y: star.y });
-      if (star.trail.length > 15) star.trail.shift();
+      if (star.trail.length > 25) star.trail.shift();
       
-      // Boundary reset
-      if (star.x < -20 || star.y > height + 20) {
-        star.x = width + Math.random() * 100;
-        star.y = Math.random() * height;
+      // Cosmic rebirth
+      if (star.x < -100 || star.y > height + 100) {
+        star.x = width + Math.random() * 300;
+        star.y = Math.random() * height * 0.3;
         star.trail = [];
       }
       
-      // Draw trail
+      // Draw fiery trail
       ctx.beginPath();
-      ctx.moveTo(star.x, star.y);
       star.trail.forEach((pos, i) => {
         const alpha = i / star.trail.length;
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
-        ctx.lineWidth = star.size * alpha;
+        ctx.strokeStyle = `rgba(255, ${150 + i * 3}, ${50 + i * 2}, ${alpha * 0.8})`;
+        ctx.lineWidth = star.size * (0.5 + alpha * 0.5);
         ctx.stroke();
       });
+      
+      // Blazing head
+      ctx.beginPath();
+      ctx.arc(star.x, star.y, star.size * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = star.color;
+      ctx.shadowBlur = star.size * 15;
+      ctx.shadowColor = star.color;
+      ctx.fill();
     });
 
     requestAnimationFrame(animate);
   }
 
-  // Optimized event listeners
-  const handleMouseMove = (e) => {
-    const mx = e.clientX;
-    const my = e.clientY;
-    
-    particles.forEach(p => {
-      const dx = p.x - mx;
-      const dy = p.y - my;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance < 100) { // Smaller interaction radius
-        p.speedX += dx / distance * 0.05; // Weaker interaction
-        p.speedY += dy / distance * 0.05;
-      }
-    });
-  };
+  // Start cosmic dance
+  requestAnimationFrame(animate);
 
+  // Responsive cosmic field
   window.addEventListener('resize', () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
   });
-
-  // Start with slight delay to prevent initial jank
-  setTimeout(() => {
-    window.addEventListener('mousemove', handleMouseMove);
-    requestAnimationFrame(animate);
-  }, 300);
-
-  return () => {
-    canvas.remove();
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('resize', handleResize);
-  };
 }
