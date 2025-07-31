@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A cosmic-themed portfolio with Wallpaper Engine-style animations",
   "main": "src/js/main.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite --host --port 3000 --open",
     "build": "vite build",
