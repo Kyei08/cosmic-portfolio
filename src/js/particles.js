@@ -1,37 +1,66 @@
 export function initParticles() {
-  // ===== CANVAS SETUP ===== 
-  // ... (keep all existing code until color scheme section)
+  // ===== CANVAS SETUP =====
+  const canvas = document.createElement('canvas');
+  canvas.className = 'particle-canvas';
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d', { 
+    alpha: true,
+    desynchronized: true
+  });
 
-  // ===== ROTATING COLOR SCHEMES =====
-  const COLOR_THEMES = [
+  // ===== DIMENSIONS =====
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  // ===== COLOR SCHEME ROTATION =====
+  const COLOR_SCHEMES = [
     { // Cosmic Purple (default)
       bg: 'rgba(10, 10, 26, 0.15)',
-      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)']
+      particles: [
+        'rgba(106, 30, 127, 0.8)',  // Purple
+        'rgba(255, 215, 0, 0.7)',   // Gold 
+        'rgba(0, 191, 255, 0.6)'    // Blue
+      ]
     },
     { // Deep Blue
       bg: 'rgba(5, 15, 30, 0.15)',
-      particles: ['rgba(30, 100, 200, 0.8)', 'rgba(100, 200, 255, 0.7)', 'rgba(0, 150, 200, 0.6)']
+      particles: [
+        'rgba(30, 100, 200, 0.8)',
+        'rgba(100, 200, 255, 0.7)',
+        'rgba(0, 150, 200, 0.6)'
+      ]
     },
     { // Space Green
       bg: 'rgba(5, 20, 15, 0.15)',
-      particles: ['rgba(30, 150, 80, 0.8)', 'rgba(180, 220, 50, 0.7)', 'rgba(0, 200, 150, 0.6)']
+      particles: [
+        'rgba(30, 150, 80, 0.8)',
+        'rgba(180, 220, 50, 0.7)',
+        'rgba(0, 200, 150, 0.6)'
+      ]
     }
   ];
 
-  // Select random theme on load
-  const theme = COLOR_THEMES[Math.floor(Math.random() * COLOR_THEMES.length)];
+  // Select random scheme on load
+  const scheme = COLOR_SCHEMES[Math.floor(Math.random() * COLOR_SCHEMES.length)];
 
-  // ===== PARTICLES ===== 
+  // ===== PARTICLES =====
   const particles = new Array(120).fill().map(() => ({
-    // ... (keep all existing particle properties)
-    color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: Math.random() * 3 + 1,
+    color: scheme.particles[Math.floor(Math.random() * scheme.particles.length)],
+    speedX: (Math.random() - 0.5) * 0.1,
+    speedY: (Math.random() - 0.5) * 0.1,
+    orbitRadius: Math.random() * 40 + 10,
+    angle: Math.random() * Math.PI * 2,
+    frequency: Math.random() * 0.003 + 0.001
   }));
 
-  // ===== SHOOTING STARS (FULLY RESTORED) =====
+  // ===== SHOOTING STARS (ORIGINAL FAST VERSION) =====
   const shootingStars = Array(5).fill().map(() => ({
     x: width + Math.random() * 300,
     y: Math.random() * height * 0.3,
-    speed: Math.random() * 6 + 3,
+    speed: Math.random() * 6 + 3, // Fast speed preserved
     size: Math.random() * 2 + 1,
     trail: [],
     lastUpdate: performance.now(),
@@ -39,11 +68,10 @@ export function initParticles() {
   }));
 
   // ===== RENDER LOOP =====
- function animate(timestamp) {
-    // Use selected theme's background
-    ctx.fillStyle = theme.bg;
+  function animate(timestamp) {
+    // Use selected color scheme background
+    ctx.fillStyle = scheme.bg;
     ctx.fillRect(0, 0, width, height);
-
 
     // Particles
     particles.forEach(p => {
@@ -62,7 +90,7 @@ export function initParticles() {
       ctx.fill();
     });
 
-    // Shooting Stars (Full Implementation)
+    // Shooting Stars (EXACTLY AS YOU SPECIFIED)
     shootingStars.forEach(star => {
       const deltaTime = Math.min(timestamp - star.lastUpdate, 32);
       star.lastUpdate = timestamp;
@@ -105,11 +133,13 @@ export function initParticles() {
   requestAnimationFrame(animate);
 
   // Handle resize
-  window.addEventListener('resize', () => {
+  const handleResize = () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-  });
+  };
+  window.addEventListener('resize', handleResize);
 
+  // Cleanup
   return () => {
     canvas.remove();
     window.removeEventListener('resize', handleResize);
