@@ -1,91 +1,51 @@
 export function initParticles() {
   // ===== CANVAS SETUP ===== 
-  const canvas = document.createElement('canvas');
-  canvas.className = 'particle-canvas';
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d', { 
-    alpha: true,
-    desynchronized: true
-  });
+  // ... (keep all existing code until color scheme section)
 
-  // ===== DIMENSIONS =====
-  let width = canvas.width = window.innerWidth;
-  let height = canvas.height = window.innerHeight;
-
-  // ===== COLOR THEME SYSTEM =====
+  // ===== ROTATING COLOR SCHEMES =====
   const COLOR_THEMES = [
     { // Cosmic Purple (default)
       bg: 'rgba(10, 10, 26, 0.15)',
-      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)'],
-      stars: { base: 'rgba(255, 180, 50, 0.9)', trail: 'rgba(255, 200, 100, 0.7)' }
+      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)']
     },
-    { // Nebula Blue
+    { // Deep Blue
       bg: 'rgba(5, 15, 30, 0.15)',
-      particles: ['rgba(65, 105, 225, 0.8)', 'rgba(100, 200, 255, 0.7)', 'rgba(138, 43, 226, 0.6)'],
-      stars: { base: 'rgba(100, 210, 255, 0.9)', trail: 'rgba(150, 220, 255, 0.7)' }
+      particles: ['rgba(30, 100, 200, 0.8)', 'rgba(100, 200, 255, 0.7)', 'rgba(0, 150, 200, 0.6)']
     },
-    { // Supernova
-      bg: 'rgba(20, 5, 15, 0.15)',
-      particles: ['rgba(255, 50, 100, 0.8)', 'rgba(255, 150, 0, 0.7)', 'rgba(200, 0, 200, 0.6)'],
-      stars: { base: 'rgba(255, 100, 50, 0.9)', trail: 'rgba(255, 150, 100, 0.7)' }
+    { // Space Green
+      bg: 'rgba(5, 20, 15, 0.15)',
+      particles: ['rgba(30, 150, 80, 0.8)', 'rgba(180, 220, 50, 0.7)', 'rgba(0, 200, 150, 0.6)']
     }
   ];
-  
-  let currentTheme = 0;
-  let themeChangeTime = 0;
-  const THEME_DURATION = 15000; // 15 seconds per theme
+
+  // Select random theme on load
+  const theme = COLOR_THEMES[Math.floor(Math.random() * COLOR_THEMES.length)];
 
   // ===== PARTICLES ===== 
-  const particles = new Array(120).fill().map(() => {
-    const theme = COLOR_THEMES[currentTheme];
-    return {
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 3 + 1,
-      color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
-      speedX: (Math.random() - 0.5) * 0.1,
-      speedY: (Math.random() - 0.5) * 0.1,
-      orbitRadius: Math.random() * 40 + 10,
-      angle: Math.random() * Math.PI * 2,
-      frequency: Math.random() * 0.003 + 0.001,
-      // Store original color index for theme changes
-      colorIndex: Math.floor(Math.random() * theme.particles.length)
-    };
-  });
+  const particles = new Array(120).fill().map(() => ({
+    // ... (keep all existing particle properties)
+    color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+  }));
 
-  // ===== SHOOTING STARS =====
-  const shootingStars = Array(5).fill().map(() => {
-    const theme = COLOR_THEMES[currentTheme];
-    return {
-      x: width + Math.random() * 300,
-      y: Math.random() * height * 0.3,
-      speed: Math.random() * 6 + 3,
-      size: Math.random() * 2 + 1,
-      trail: [],
-      lastUpdate: performance.now(),
-      color: theme.stars.base
-    };
-  });
+  // ===== SHOOTING STARS (FULLY RESTORED) =====
+  const shootingStars = Array(5).fill().map(() => ({
+    x: width + Math.random() * 300,
+    y: Math.random() * height * 0.3,
+    speed: Math.random() * 6 + 3,
+    size: Math.random() * 2 + 1,
+    trail: [],
+    lastUpdate: performance.now(),
+    color: `rgba(255, ${150 + Math.random() * 105}, 50, 0.9)`
+  }));
 
   // ===== RENDER LOOP =====
-  function animate(timestamp) {
-    // Handle theme transitions
-    if (!themeChangeTime) themeChangeTime = timestamp;
-    if (timestamp - themeChangeTime > THEME_DURATION) {
-      currentTheme = (currentTheme + 1) % COLOR_THEMES.length;
-      themeChangeTime = timestamp;
-      
-      // Update particle colors smoothly
-      particles.forEach(p => {
-        p.color = COLOR_THEMES[currentTheme].particles[p.colorIndex];
-      });
-    }
-
-    // Background (always from current theme)
-    ctx.fillStyle = COLOR_THEMES[currentTheme].bg;
+ function animate(timestamp) {
+    // Use selected theme's background
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Particles (unchanged logic)
+
+    // Particles
     particles.forEach(p => {
       p.angle += p.frequency;
       p.x += Math.sin(p.angle) * 0.03 + p.speedX;
@@ -102,7 +62,7 @@ export function initParticles() {
       ctx.fill();
     });
 
-    // Shooting Stars (updated to use theme colors)
+    // Shooting Stars (Full Implementation)
     shootingStars.forEach(star => {
       const deltaTime = Math.min(timestamp - star.lastUpdate, 32);
       star.lastUpdate = timestamp;
@@ -117,15 +77,14 @@ export function initParticles() {
         star.x = width + Math.random() * 300;
         star.y = Math.random() * height * 0.3;
         star.trail = [];
-        star.color = COLOR_THEMES[currentTheme].stars.base;
       }
       
-      // Draw trail (using theme color)
+      // Draw trail
       ctx.beginPath();
       star.trail.forEach((pos, i) => {
         const alpha = i / star.trail.length;
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = COLOR_THEMES[currentTheme].stars.trail.replace('0.7', alpha.toFixed(2));
+        ctx.strokeStyle = `rgba(255, ${150 + i * 3}, ${50 + i * 2}, ${alpha * 0.8})`;
         ctx.lineWidth = star.size * (0.5 + alpha * 0.5);
         ctx.stroke();
       });
@@ -142,19 +101,17 @@ export function initParticles() {
     requestAnimationFrame(animate);
   }
 
-  // ===== START & CLEANUP =====
-  let animationId = requestAnimationFrame(animate);
-  
-  const handleResize = () => {
+  // Start animation
+  requestAnimationFrame(animate);
+
+  // Handle resize
+  window.addEventListener('resize', () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-  };
-  
-  window.addEventListener('resize', handleResize);
-  
+  });
+
   return () => {
-    cancelAnimationFrame(animationId);
-    window.removeEventListener('resize', handleResize);
     canvas.remove();
+    window.removeEventListener('resize', handleResize);
   };
 }
