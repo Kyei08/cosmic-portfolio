@@ -1,5 +1,5 @@
 export function initParticles() {
-  // ===== CANVAS SETUP =====
+  // ===== CANVAS SETUP ===== 
   const canvas = document.createElement('canvas');
   canvas.className = 'particle-canvas';
   document.body.appendChild(canvas);
@@ -12,45 +12,80 @@ export function initParticles() {
   let width = canvas.width = window.innerWidth;
   let height = canvas.height = window.innerHeight;
 
-  // ===== STABLE COLOR SCHEME =====
-  const COSMIC_BG = 'rgba(10, 10, 26, 0.15)'; // Consistent dark purple
-  const PARTICLE_COLORS = [
-    'rgba(106, 30, 127, 0.8)',  // Purple
-    'rgba(255, 215, 0, 0.7)',   // Gold
-    'rgba(0, 191, 255, 0.6)'    // Blue
+  // ===== COLOR THEME SYSTEM =====
+  const COLOR_THEMES = [
+    { // Cosmic Purple (default)
+      bg: 'rgba(10, 10, 26, 0.15)',
+      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)'],
+      stars: { base: 'rgba(255, 180, 50, 0.9)', trail: 'rgba(255, 200, 100, 0.7)' }
+    },
+    { // Nebula Blue
+      bg: 'rgba(5, 15, 30, 0.15)',
+      particles: ['rgba(65, 105, 225, 0.8)', 'rgba(100, 200, 255, 0.7)', 'rgba(138, 43, 226, 0.6)'],
+      stars: { base: 'rgba(100, 210, 255, 0.9)', trail: 'rgba(150, 220, 255, 0.7)' }
+    },
+    { // Supernova
+      bg: 'rgba(20, 5, 15, 0.15)',
+      particles: ['rgba(255, 50, 100, 0.8)', 'rgba(255, 150, 0, 0.7)', 'rgba(200, 0, 200, 0.6)'],
+      stars: { base: 'rgba(255, 100, 50, 0.9)', trail: 'rgba(255, 150, 100, 0.7)' }
+    }
   ];
+  
+  let currentTheme = 0;
+  let themeChangeTime = 0;
+  const THEME_DURATION = 15000; // 15 seconds per theme
 
-  // ===== PARTICLES =====
-  const particles = new Array(120).fill().map(() => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    size: Math.random() * 3 + 1,
-    color: PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)],
-    speedX: (Math.random() - 0.5) * 0.1,
-    speedY: (Math.random() - 0.5) * 0.1,
-    orbitRadius: Math.random() * 40 + 10,
-    angle: Math.random() * Math.PI * 2,
-    frequency: Math.random() * 0.003 + 0.001
-  }));
+  // ===== PARTICLES ===== 
+  const particles = new Array(120).fill().map(() => {
+    const theme = COLOR_THEMES[currentTheme];
+    return {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 3 + 1,
+      color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+      speedX: (Math.random() - 0.5) * 0.1,
+      speedY: (Math.random() - 0.5) * 0.1,
+      orbitRadius: Math.random() * 40 + 10,
+      angle: Math.random() * Math.PI * 2,
+      frequency: Math.random() * 0.003 + 0.001,
+      // Store original color index for theme changes
+      colorIndex: Math.floor(Math.random() * theme.particles.length)
+    };
+  });
 
-  // ===== SHOOTING STARS (FULLY RESTORED) =====
-  const shootingStars = Array(5).fill().map(() => ({
-    x: width + Math.random() * 300,
-    y: Math.random() * height * 0.3,
-    speed: Math.random() * 6 + 3,
-    size: Math.random() * 2 + 1,
-    trail: [],
-    lastUpdate: performance.now(),
-    color: `rgba(255, ${150 + Math.random() * 105}, 50, 0.9)`
-  }));
+  // ===== SHOOTING STARS =====
+  const shootingStars = Array(5).fill().map(() => {
+    const theme = COLOR_THEMES[currentTheme];
+    return {
+      x: width + Math.random() * 300,
+      y: Math.random() * height * 0.3,
+      speed: Math.random() * 6 + 3,
+      size: Math.random() * 2 + 1,
+      trail: [],
+      lastUpdate: performance.now(),
+      color: theme.stars.base
+    };
+  });
 
   // ===== RENDER LOOP =====
   function animate(timestamp) {
-    // Stable background
-    ctx.fillStyle = COSMIC_BG;
+    // Handle theme transitions
+    if (!themeChangeTime) themeChangeTime = timestamp;
+    if (timestamp - themeChangeTime > THEME_DURATION) {
+      currentTheme = (currentTheme + 1) % COLOR_THEMES.length;
+      themeChangeTime = timestamp;
+      
+      // Update particle colors smoothly
+      particles.forEach(p => {
+        p.color = COLOR_THEMES[currentTheme].particles[p.colorIndex];
+      });
+    }
+
+    // Background (always from current theme)
+    ctx.fillStyle = COLOR_THEMES[currentTheme].bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Particles
+    // Particles (unchanged logic)
     particles.forEach(p => {
       p.angle += p.frequency;
       p.x += Math.sin(p.angle) * 0.03 + p.speedX;
@@ -67,7 +102,7 @@ export function initParticles() {
       ctx.fill();
     });
 
-    // Shooting Stars (Full Implementation)
+    // Shooting Stars (updated to use theme colors)
     shootingStars.forEach(star => {
       const deltaTime = Math.min(timestamp - star.lastUpdate, 32);
       star.lastUpdate = timestamp;
@@ -82,14 +117,15 @@ export function initParticles() {
         star.x = width + Math.random() * 300;
         star.y = Math.random() * height * 0.3;
         star.trail = [];
+        star.color = COLOR_THEMES[currentTheme].stars.base;
       }
       
-      // Draw trail
+      // Draw trail (using theme color)
       ctx.beginPath();
       star.trail.forEach((pos, i) => {
         const alpha = i / star.trail.length;
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = `rgba(255, ${150 + i * 3}, ${50 + i * 2}, ${alpha * 0.8})`;
+        ctx.strokeStyle = COLOR_THEMES[currentTheme].stars.trail.replace('0.7', alpha.toFixed(2));
         ctx.lineWidth = star.size * (0.5 + alpha * 0.5);
         ctx.stroke();
       });
@@ -106,17 +142,19 @@ export function initParticles() {
     requestAnimationFrame(animate);
   }
 
-  // Start animation
-  requestAnimationFrame(animate);
-
-  // Handle resize
-  window.addEventListener('resize', () => {
+  // ===== START & CLEANUP =====
+  let animationId = requestAnimationFrame(animate);
+  
+  const handleResize = () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-  });
-
+  };
+  
+  window.addEventListener('resize', handleResize);
+  
   return () => {
-    canvas.remove();
+    cancelAnimationFrame(animationId);
     window.removeEventListener('resize', handleResize);
+    canvas.remove();
   };
 }
