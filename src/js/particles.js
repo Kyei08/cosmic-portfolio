@@ -1,4 +1,46 @@
 export function initParticles() {
+  // ===== THEME SYSTEM =====
+  const THEMES = {
+    0: { // Cosmic Purple (Default)
+      bg: 'rgba(26, 10, 42, 0.15)',
+      particles: [
+        'rgba(106, 30, 127, 0.8)',
+        'rgba(160, 32, 240, 0.7)',
+        'rgba(138, 43, 226, 0.6)'
+      ],
+      starColor: 'rgba(255, 215, 0, 0.9)' // Gold stars for contrast
+    },
+    1: { // Cosmic Gold 
+      bg: 'rgba(42, 26, 10, 0.15)',
+      particles: [
+        'rgba(255, 215, 0, 0.8)',
+        'rgba(255, 165, 0, 0.7)',
+        'rgba(218, 165, 32, 0.6)'
+      ],
+      starColor: 'rgba(106, 30, 127, 0.9)' // Purple stars
+    },
+    2: { // Cosmic Blue
+      bg: 'rgba(10, 26, 42, 0.15)',
+      particles: [
+        'rgba(0, 191, 255, 0.8)',
+        'rgba(65, 105, 225, 0.7)',
+        'rgba(100, 149, 237, 0.6)'
+      ],
+      starColor: 'rgba(255, 140, 0, 0.9)' // Orange stars
+    }
+  };
+
+  // Load or generate theme
+  let themeId = localStorage.getItem('cosmicTheme') || 
+                Math.floor(Math.random() * Object.keys(THEMES).length);
+  const theme = THEMES[themeId];
+
+  // Rotate theme on next load
+  window.addEventListener('beforeunload', () => {
+    localStorage.setItem('cosmicTheme', 
+      (parseInt(themeId) + 1) % Object.keys(THEMES).length);
+  });
+
   // ===== CANVAS SETUP =====
   const canvas = document.createElement('canvas');
   canvas.className = 'particle-canvas';
@@ -12,41 +54,18 @@ export function initParticles() {
   let width = canvas.width = window.innerWidth;
   let height = canvas.height = window.innerHeight;
 
-  // ===== COLOR THEMES =====
-  const COLOR_THEMES = [
-    { // Cosmic Purple (default)
-      bg: 'rgba(10, 10, 26, 0.15)',
-      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)']
-    },
-    { // Deep Space
-      bg: 'rgba(16, 5, 36, 0.15)',
-      particles: ['rgba(159, 39, 176, 0.8)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.6)']
-    },
-    { // Nebula
-      bg: 'rgba(5, 20, 30, 0.15)',
-      particles: ['rgba(63, 81, 181, 0.8)', 'rgba(255, 87, 34, 0.7)', 'rgba(0, 230, 118, 0.6)']
-    }
-  ];
-
-  let currentTheme = 0;
-  let nextThemeChange = performance.now() + 15000; // 15-second intervals
-
   // ===== PARTICLES =====
-  const particles = new Array(120).fill().map(() => {
-    const theme = COLOR_THEMES[currentTheme];
-    return {
-      x: Math.random() * width,
-      y: Math.random() * height,
-      size: Math.random() * 3 + 1,
-      color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
-      originalColor: theme.particles[Math.floor(Math.random() * theme.particles.length)],
-      speedX: (Math.random() - 0.5) * 0.1,
-      speedY: (Math.random() - 0.5) * 0.1,
-      orbitRadius: Math.random() * 40 + 10,
-      angle: Math.random() * Math.PI * 2,
-      frequency: Math.random() * 0.003 + 0.001
-    };
-  });
+  const particles = new Array(120).fill().map(() => ({
+    x: Math.random() * width,
+    y: Math.random() * height,
+    size: Math.random() * 3 + 1,
+    color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+    speedX: (Math.random() - 0.5) * 0.1,
+    speedY: (Math.random() - 0.5) * 0.1,
+    orbitRadius: Math.random() * 40 + 10,
+    angle: Math.random() * Math.PI * 2,
+    frequency: Math.random() * 0.003 + 0.001
+  }));
 
   // ===== SHOOTING STARS =====
   const shootingStars = Array(5).fill().map(() => ({
@@ -56,22 +75,16 @@ export function initParticles() {
     size: Math.random() * 2 + 1,
     trail: [],
     lastUpdate: performance.now(),
-    color: `rgba(255, ${150 + Math.random() * 105}, 50, 0.9)`
+    color: theme.starColor
   }));
 
   // ===== RENDER LOOP =====
   function animate(timestamp) {
-    // Theme cycling (every 15s)
-    if (timestamp > nextThemeChange) {
-      currentTheme = (currentTheme + 1) % COLOR_THEMES.length;
-      nextThemeChange = timestamp + 15000;
-    }
-
-    // Background (current theme)
-    ctx.fillStyle = COLOR_THEMES[currentTheme].bg;
+    // Stable background
+    ctx.fillStyle = theme.bg;
     ctx.fillRect(0, 0, width, height);
 
-    // Particles
+    // Draw particles
     particles.forEach(p => {
       p.angle += p.frequency;
       p.x += Math.sin(p.angle) * 0.03 + p.speedX;
@@ -88,7 +101,7 @@ export function initParticles() {
       ctx.fill();
     });
 
-    // Shooting Stars
+    // Draw shooting stars
     shootingStars.forEach(star => {
       const deltaTime = Math.min(timestamp - star.lastUpdate, 32);
       star.lastUpdate = timestamp;
@@ -105,17 +118,17 @@ export function initParticles() {
         star.trail = [];
       }
       
-      // Draw trail
+      // Trail
       ctx.beginPath();
       star.trail.forEach((pos, i) => {
         const alpha = i / star.trail.length;
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = `rgba(255, ${150 + i * 3}, ${50 + i * 2}, ${alpha * 0.8})`;
+        ctx.strokeStyle = `${star.color.replace('0.9', alpha * 0.7)}`;
         ctx.lineWidth = star.size * (0.5 + alpha * 0.5);
         ctx.stroke();
       });
       
-      // Draw head
+      // Head
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.size * 1.5, 0, Math.PI * 2);
       ctx.fillStyle = star.color;
@@ -131,13 +144,11 @@ export function initParticles() {
   requestAnimationFrame(animate);
 
   // Handle resize
-  const handleResize = () => {
+  window.addEventListener('resize', () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
-  };
-  window.addEventListener('resize', handleResize);
+  });
 
-  // Cleanup
   return () => {
     canvas.remove();
     window.removeEventListener('resize', handleResize);
