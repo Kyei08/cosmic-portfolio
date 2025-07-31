@@ -47,3 +47,14 @@ body {
   height: 100vh;
 }
 
+.particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: pixelated;
+}
