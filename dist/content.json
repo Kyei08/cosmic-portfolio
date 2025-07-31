@@ -1,0 +1,19 @@
+{
+  "sections": [
+    {
+      "id": "about",
+      "title": "Cosmic Origins",
+      "content": "<p>Journey through the stars of web development...</p>"
+    },
+    {
+      "id": "work",
+      "title": "Stellar Projects",
+      "content": "<div class='project-grid'>...</div>"
+    },
+    {
+      "id": "contact",
+      "title": "Interstellar Contact",
+      "content": "<form class='cosmic-form'>...</form>"
+    }
+  ]
+}

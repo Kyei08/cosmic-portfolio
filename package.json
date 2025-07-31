@@ -1,0 +1,47 @@
+{
+  "name": "cosmic-portfolio",
+  "version": "1.0.0",
+  "description": "A cosmic-themed portfolio with Wallpaper Engine-style animations",
+  "main": "src/js/main.js",
+  "scripts": {
+    "dev": "vite --host --port 3000 --open",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write .",
+    "prepare": "husky install",
+    "deploy": "npm run build && npx netlify deploy --dir=dist --prod"
+  },
+  "keywords": [
+    "portfolio",
+    "cosmic",
+    "animation",
+    "webgl",
+    "interactive",
+    "particles"
+  ],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "postcss": "^8.4.35",
+    "postcss-preset-env": "^9.3.0",
+    "prettier": "^3.2.5",
+    "vite": "^5.4.19",
+    "vite-plugin-glsl": "^1.5.1",
+    "netlify-cli": "^17.16.0"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "maintained node versions"
+  ],
+  "lint-staged": {
+    "*.{js,css,html}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  }
+}
