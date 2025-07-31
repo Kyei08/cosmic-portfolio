@@ -1,148 +1,148 @@
 export function initParticles() {
+  // Create optimized canvas
   const canvas = document.createElement('canvas');
   canvas.className = 'particle-canvas';
   document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
   
-  // Initial setup
+  // GPU-accelerated rendering
+  const ctx = canvas.getContext('2d', { alpha: true });
   let width = window.innerWidth;
   let height = window.innerHeight;
   canvas.width = width;
   canvas.height = height;
-  
-  // Cosmic particles
+
+  // Performance-optimized particles
   const particles = [];
-  const particleCount = 150;
+  const particleCount = 80; // Reduced from 150
   const colors = ['#ffd700', '#ff8c42', '#ff6b35', '#4a0e4e'];
-  
-  // Shooting stars
-  const shootingStars = Array(5).fill().map(() => ({
+
+  // Optimized shooting stars
+  const shootingStars = Array(3).fill().map(() => ({
     x: Math.random() * width,
     y: Math.random() * height,
-    speed: Math.random() * 5 + 3,
-    size: Math.random() * 2 + 1,
+    speed: Math.random() * 3 + 2, // Reduced speed
+    size: Math.random() * 1.5 + 0.5,
     trail: [],
     lastUpdate: performance.now()
   }));
-  
-  // Create particles
+
+  // Initialize particles with better distribution
   for (let i = 0; i < particleCount; i++) {
     particles.push({
       x: Math.random() * width,
       y: Math.random() * height,
-      size: Math.random() * 3 + 1,
+      size: Math.random() * 2 + 0.5, // Smaller particles
       color: colors[Math.floor(Math.random() * colors.length)],
-      speedX: Math.random() * 0.5 - 0.25,
-      speedY: Math.random() * 0.5 - 0.25,
+      speedX: Math.random() * 0.3 - 0.15, // Slower movement
+      speedY: Math.random() * 0.3 - 0.15,
       angle: 0,
-      angleSpeed: Math.random() * 0.02 - 0.01
+      angleSpeed: Math.random() * 0.01 - 0.005
     });
   }
+
+  // Throttled animation loop
+  let lastFrameTime = 0;
+  const frameRate = 30; // Target FPS
   
   function animate(timestamp) {
-    // Resize handling
-    if (width !== window.innerWidth || height !== window.innerHeight) {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+    // Skip frames to maintain target FPS
+    if (timestamp - lastFrameTime < 1000 / frameRate) {
+      requestAnimationFrame(animate);
+      return;
     }
+    lastFrameTime = timestamp;
+
+    // Efficient clearing
+    ctx.clearRect(0, 0, width, height);
     
-    // Clear with fade effect
-    ctx.fillStyle = 'rgba(10, 10, 26, 0.05)';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Update cosmic particles
+    // Batch particle drawing
+    ctx.save();
     particles.forEach(p => {
       p.x += p.speedX;
       p.y += p.speedY;
       p.angle += p.angleSpeed;
       
-      // Boundary wrapping
-      if (p.x > width + 50) p.x = -50;
-      if (p.x < -50) p.x = width + 50;
-      if (p.y > height + 50) p.y = -50;
-      if (p.y < -50) p.y = height + 50;
+      // Boundary wrapping with buffer
+      if (p.x > width + 20) p.x = -20;
+      if (p.x < -20) p.x = width + 20;
+      if (p.y > height + 20) p.y = -20;
+      if (p.y < -20) p.y = height + 20;
       
-      // Draw with pulsing glow
-      const pulse = 0.5 + 0.5 * Math.sin(timestamp * 0.002 + p.x * 0.01);
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.angle);
+      // Optimized glow effect
+      const glowIntensity = 0.6 + 0.4 * Math.sin(timestamp * 0.001 + p.x * 0.005);
       ctx.beginPath();
-      ctx.arc(0, 0, p.size * pulse, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
       ctx.fillStyle = p.color;
-      ctx.shadowBlur = p.size * 3 * pulse;
+      ctx.shadowBlur = p.size * 2 * glowIntensity;
       ctx.shadowColor = p.color;
       ctx.fill();
-      ctx.restore();
     });
-    
-    // Update shooting stars
+    ctx.restore();
+
+    // Optimized shooting stars
     shootingStars.forEach(star => {
-      const deltaTime = timestamp - star.lastUpdate;
-      const distance = star.speed * (deltaTime / 1000);
-      
-      star.x -= distance;
-      star.y += distance * 0.3;
+      const deltaTime = Math.min(timestamp - star.lastUpdate, 100); // Cap delta
       star.lastUpdate = timestamp;
       
+      star.x -= star.speed * (deltaTime / 1000);
+      star.y += star.speed * 0.3 * (deltaTime / 1000);
+      
       star.trail.push({ x: star.x, y: star.y });
-      if (star.trail.length > 20) star.trail.shift();
+      if (star.trail.length > 15) star.trail.shift();
       
       // Boundary reset
-      if (star.x < -50 || star.y > height + 50) {
-        star.x = width + Math.random() * 200;
+      if (star.x < -20 || star.y > height + 20) {
+        star.x = width + Math.random() * 100;
         star.y = Math.random() * height;
         star.trail = [];
       }
       
       // Draw trail
       ctx.beginPath();
+      ctx.moveTo(star.x, star.y);
       star.trail.forEach((pos, i) => {
         const alpha = i / star.trail.length;
         ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha * 0.7})`;
         ctx.lineWidth = star.size * alpha;
         ctx.stroke();
       });
-      
-      // Draw head with intense glow
-      ctx.beginPath();
-      ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
-      ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = star.size * 5;
-      ctx.shadowColor = '#ffffff';
-      ctx.fill();
     });
-    
+
     requestAnimationFrame(animate);
   }
-  
-  // Start animation
-  requestAnimationFrame(animate);
-  
-  // Handle resize
+
+  // Optimized event listeners
+  const handleMouseMove = (e) => {
+    const mx = e.clientX;
+    const my = e.clientY;
+    
+    particles.forEach(p => {
+      const dx = p.x - mx;
+      const dy = p.y - my;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance < 100) { // Smaller interaction radius
+        p.speedX += dx / distance * 0.05; // Weaker interaction
+        p.speedY += dy / distance * 0.05;
+      }
+    });
+  };
+
   window.addEventListener('resize', () => {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
   });
-  
-  // Cleanup
+
+  // Start with slight delay to prevent initial jank
+  setTimeout(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    requestAnimationFrame(animate);
+  }, 300);
+
   return () => {
     canvas.remove();
+    window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('resize', handleResize);
   };
 }
-
-// Add to animate() function
-document.addEventListener('mousemove', (e) => {
-  particles.forEach(p => {
-    const dx = p.x - e.clientX;
-    const dy = p.y - e.clientY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-    
-    if (distance < 150) {
-      p.speedX += dx / distance * 0.1;
-      p.speedY += dy / distance * 0.1;
-    }
-  });
-});

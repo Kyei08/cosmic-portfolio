@@ -36,3 +36,14 @@ body {
   z-index: -2;
   backdrop-filter: blur(1px);
 }
+
+.particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+}
+
