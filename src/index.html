@@ -7,6 +7,19 @@
   <link rel="stylesheet" href="./css/main.css">
   <link rel="stylesheet" href="./css/animations.css">
   <link rel="stylesheet" href="./css/content.css">
+
+  <style>
+  .particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+  }
+</style>
+
 </head>
 <body>
   <!-- Background Elements -->
@@ -32,5 +45,6 @@
   </div>
 
   <script type="module" src="./js/main.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </body>
 </html>

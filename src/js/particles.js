@@ -12,55 +12,47 @@ export function initParticles() {
   let width = canvas.width = window.innerWidth;
   let height = canvas.height = window.innerHeight;
 
-  // ===== COLOR SCHEME ROTATION =====
-  const COLOR_SCHEMES = [
+  // ===== COLOR THEMES =====
+  const COLOR_THEMES = [
     { // Cosmic Purple (default)
       bg: 'rgba(10, 10, 26, 0.15)',
-      particles: [
-        'rgba(106, 30, 127, 0.8)',  // Purple
-        'rgba(255, 215, 0, 0.7)',   // Gold 
-        'rgba(0, 191, 255, 0.6)'    // Blue
-      ]
+      particles: ['rgba(106, 30, 127, 0.8)', 'rgba(255, 215, 0, 0.7)', 'rgba(0, 191, 255, 0.6)']
     },
-    { // Deep Blue
-      bg: 'rgba(5, 15, 30, 0.15)',
-      particles: [
-        'rgba(30, 100, 200, 0.8)',
-        'rgba(100, 200, 255, 0.7)',
-        'rgba(0, 150, 200, 0.6)'
-      ]
+    { // Deep Space
+      bg: 'rgba(16, 5, 36, 0.15)',
+      particles: ['rgba(159, 39, 176, 0.8)', 'rgba(255, 152, 0, 0.7)', 'rgba(0, 188, 212, 0.6)']
     },
-    { // Space Green
-      bg: 'rgba(5, 20, 15, 0.15)',
-      particles: [
-        'rgba(30, 150, 80, 0.8)',
-        'rgba(180, 220, 50, 0.7)',
-        'rgba(0, 200, 150, 0.6)'
-      ]
+    { // Nebula
+      bg: 'rgba(5, 20, 30, 0.15)',
+      particles: ['rgba(63, 81, 181, 0.8)', 'rgba(255, 87, 34, 0.7)', 'rgba(0, 230, 118, 0.6)']
     }
   ];
 
-  // Select random scheme on load
-  const scheme = COLOR_SCHEMES[Math.floor(Math.random() * COLOR_SCHEMES.length)];
+  let currentTheme = 0;
+  let nextThemeChange = performance.now() + 15000; // 15-second intervals
 
   // ===== PARTICLES =====
-  const particles = new Array(120).fill().map(() => ({
-    x: Math.random() * width,
-    y: Math.random() * height,
-    size: Math.random() * 3 + 1,
-    color: scheme.particles[Math.floor(Math.random() * scheme.particles.length)],
-    speedX: (Math.random() - 0.5) * 0.1,
-    speedY: (Math.random() - 0.5) * 0.1,
-    orbitRadius: Math.random() * 40 + 10,
-    angle: Math.random() * Math.PI * 2,
-    frequency: Math.random() * 0.003 + 0.001
-  }));
+  const particles = new Array(120).fill().map(() => {
+    const theme = COLOR_THEMES[currentTheme];
+    return {
+      x: Math.random() * width,
+      y: Math.random() * height,
+      size: Math.random() * 3 + 1,
+      color: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+      originalColor: theme.particles[Math.floor(Math.random() * theme.particles.length)],
+      speedX: (Math.random() - 0.5) * 0.1,
+      speedY: (Math.random() - 0.5) * 0.1,
+      orbitRadius: Math.random() * 40 + 10,
+      angle: Math.random() * Math.PI * 2,
+      frequency: Math.random() * 0.003 + 0.001
+    };
+  });
 
-  // ===== SHOOTING STARS (ORIGINAL FAST VERSION) =====
+  // ===== SHOOTING STARS =====
   const shootingStars = Array(5).fill().map(() => ({
     x: width + Math.random() * 300,
     y: Math.random() * height * 0.3,
-    speed: Math.random() * 6 + 3, // Fast speed preserved
+    speed: Math.random() * 6 + 3,
     size: Math.random() * 2 + 1,
     trail: [],
     lastUpdate: performance.now(),
@@ -69,8 +61,14 @@ export function initParticles() {
 
   // ===== RENDER LOOP =====
   function animate(timestamp) {
-    // Use selected color scheme background
-    ctx.fillStyle = scheme.bg;
+    // Theme cycling (every 15s)
+    if (timestamp > nextThemeChange) {
+      currentTheme = (currentTheme + 1) % COLOR_THEMES.length;
+      nextThemeChange = timestamp + 15000;
+    }
+
+    // Background (current theme)
+    ctx.fillStyle = COLOR_THEMES[currentTheme].bg;
     ctx.fillRect(0, 0, width, height);
 
     // Particles
@@ -90,7 +88,7 @@ export function initParticles() {
       ctx.fill();
     });
 
-    // Shooting Stars (EXACTLY AS YOU SPECIFIED)
+    // Shooting Stars
     shootingStars.forEach(star => {
       const deltaTime = Math.min(timestamp - star.lastUpdate, 32);
       star.lastUpdate = timestamp;
